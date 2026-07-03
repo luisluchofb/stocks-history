@@ -1,0 +1,26 @@
+name: live-cierre
+on:
+  workflow_dispatch: {}          # piloto manual (P150.b)
+  schedule:
+    - cron: '30 21 * * 1-5'      # 21:30 UTC: post-cierre US todo el año
+permissions:
+  contents: write
+concurrency:
+  group: live-cierre
+  cancel-in-progress: false
+jobs:
+  cierre:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: panel US mercado completo
+        run: python producer_live.py america
+      - name: commit
+        run: |
+          git config user.name "live-action"
+          git config user.email "live-action@users.noreply.github.com"
+          git add -A
+          git commit -m "live: cierre $(date -u +%F)" || echo "sin cambios"
+          git push
