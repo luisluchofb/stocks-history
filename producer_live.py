@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Productor LIVE v2: panel de cierre de MERCADO COMPLETO (scanner TradingView).
+"""Productor DIAS-TV: panel de CIERRE de MERCADO COMPLETO (scanner TradingView).
+(ex-LIVE; renombrado a DIAS-TV para marcar naturaleza: cierres del dia, fuente TV.)
 Provenance: TV-LIVE-RAW (sin ajustar). Sin universe.txt [G-D]: barrido con
 filtros; la watchlist filtra al LEER. Columnas TV = ~ hasta piloto P150.b.
 Uso: python producer_live.py [america|germany|spain|italy|france|uk]"""
@@ -7,7 +8,7 @@ import json, sys, datetime, pathlib, urllib.request
 
 MARKET = sys.argv[1] if len(sys.argv) > 1 else "america"
 CFG = {  # exchanges EU = ~ verificar en piloto P152
-    "america": {"out": "LIVE",    "exch": ["NYSE", "NASDAQ", "AMEX"], "min_rows": 6000},
+    "america": {"out": "DIAS-TV", "exch": ["NYSE", "NASDAQ", "AMEX"], "min_rows": 6000},
     "germany": {"out": "LIVE-EU", "exch": ["XETR"],        "min_rows": 300},
     "spain":   {"out": "LIVE-EU", "exch": ["BME"],         "min_rows": 80},
     "italy":   {"out": "LIVE-EU", "exch": ["MIL"],         "min_rows": 150},

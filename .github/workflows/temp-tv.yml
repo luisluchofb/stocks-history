@@ -1,0 +1,24 @@
+name: temp-tv
+on:
+  workflow_dispatch: {}          # SOLO manual — intradia a demanda (se pide cuando se necesita)
+permissions:
+  contents: write
+concurrency:
+  group: temp-tv
+  cancel-in-progress: false
+jobs:
+  intradia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: panel intradia mercado completo
+        run: python producer_tempv.py america
+      - name: commit
+        run: |
+          git config user.name "temp-tv-action"
+          git config user.email "temp-tv-action@users.noreply.github.com"
+          git add -A
+          git commit -m "temp-tv: intradia $(date -u +%FT%H%MZ)" || echo "sin cambios"
+          git push
