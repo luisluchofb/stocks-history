@@ -1,0 +1,5 @@
+# SERIES-REMOTO — histórico diario WL + benchmarks (Stooq, ajustado total-return)
+Cobertura: 2000-01-03 → 2026-07-01 · 6663 sesiones · 426 stocks (WL) + 96 ETF (BENCH).
+Layouts: /DIAS/CIERRE-{fecha}.csv (panel WL del día, solo-stocks) · /TICKERS/{T}.csv (serie por nombre) · /BENCH/{T}.csv (ETF/benchmarks por nombre). MANIFEST.csv = mapa de cobertura (clase, rangos, raw_first del bulk, flags). CALENDAR.txt = sesiones.
+Provenance: bulk Stooq d_us, close AJUSTADO (splits+dividendos, verificado empiricamente XLU/LMT). Profundidad HETEROGENEA por ticker: 40 nombres PROFUNDO (raw<2000), 147 BORDE-COBERTURA (raw arranca 2005-02-25), resto inception real. Limitacion de clase: universo-vivo-actual (survivorship+selection) — sirve regimen/varianza/correlacion, NO seleccion/retornos absolutos sin correccion. Niveles absolutos de dividend-payers difieren del grafico raw (convencion, no error).
+Fetch: raw.githubusercontent.com/{user}/{repo}/main/TICKERS/NVDA.csv · restore total: codeload zip del tag mensual YYYY-MM.
