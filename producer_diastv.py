@@ -2,18 +2,18 @@
 """Productor DIAS-TV: panel de CIERRE de MERCADO COMPLETO (scanner TradingView).
 (ex-LIVE; renombrado a DIAS-TV para marcar naturaleza: cierres del dia, fuente TV.)
 Provenance: TV-LIVE-RAW (sin ajustar). Sin universe.txt [G-D]: barrido con
-filtros; la watchlist filtra al LEER. Columnas TV = ~ hasta piloto P150.b.
-Uso: python producer_live.py [america|germany|spain|italy|france|uk]"""
+filtros; la watchlist filtra al LEER. Columnas TV validadas en piloto (P150.b).
+Uso: python producer_diastv.py [america|germany|spain|italy|france|uk]"""
 import json, sys, datetime, pathlib, urllib.request
 
 MARKET = sys.argv[1] if len(sys.argv) > 1 else "america"
 CFG = {  # exchanges EU = ~ verificar en piloto P152
     "america": {"out": "DIAS-TV", "exch": ["NYSE", "NASDAQ", "AMEX"], "min_rows": 6000},
-    "germany": {"out": "LIVE-EU", "exch": ["XETR"],        "min_rows": 300},
-    "spain":   {"out": "LIVE-EU", "exch": ["BME"],         "min_rows": 80},
-    "italy":   {"out": "LIVE-EU", "exch": ["MIL"],         "min_rows": 150},
-    "france":  {"out": "LIVE-EU", "exch": ["EURONEXTPAR"], "min_rows": 200},
-    "uk":      {"out": "LIVE-EU", "exch": ["LSE"],         "min_rows": 300},
+    "germany": {"out": "DIAS-TV-EU", "exch": ["XETR"],        "min_rows": 300},
+    "spain":   {"out": "DIAS-TV-EU", "exch": ["BME"],         "min_rows": 80},
+    "italy":   {"out": "DIAS-TV-EU", "exch": ["MIL"],         "min_rows": 150},
+    "france":  {"out": "DIAS-TV-EU", "exch": ["EURONEXTPAR"], "min_rows": 200},
+    "uk":      {"out": "DIAS-TV-EU", "exch": ["LSE"],         "min_rows": 300},
 }[MARKET]
 
 TV_COLS = ["name","open","close","change","gap","volume","relative_volume_10d_calc",

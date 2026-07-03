@@ -1,10 +1,10 @@
-name: temp-tv
+name: temptv-workflow
 on:
   workflow_dispatch: {}          # SOLO manual — intradia a demanda (se pide cuando se necesita)
 permissions:
   contents: write
 concurrency:
-  group: temp-tv
+  group: temptv-workflow
   cancel-in-progress: false
 jobs:
   intradia:

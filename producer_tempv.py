@@ -6,7 +6,8 @@ en sesion (perfs multi-mes, SMA200, 52wh), dentro lo volatil (VWAP, premarket/po
 high/low de sesion, turnover) que el analisis tecnico/momentum usa y ningun historico recoge.
 Escribe SOLO en TEMP-TV/ con nombre TEMPTV-AAAAMMDD-HHMM.csv (varios por dia conviven).
 NO dedupe, NO DELISTED (son del historico). Purga = MANUAL (Lucho, a criterio).
-Campos volatiles marcados ~ hasta piloto de validacion (nombres del scanner no-oficial).
+Campos volatiles (VWAP/premkt/postmkt/turnover) CONFIRMADOS en piloto estructural
+3-jul-2026; pendiente solo validar movimiento vivo en sesion (P160.a).
 Uso: python producer_tempv.py [america]
 """
 import json, sys, datetime, pathlib, urllib.request
@@ -16,18 +17,18 @@ CFG = {
     "america": {"out": "TEMP-TV", "exch": ["NYSE", "NASDAQ", "AMEX"], "min_rows": 4000},
 }[MARKET]
 
-# Schema INTRADIA propio. Nucleo volatil + generosos (~ = validar en piloto; el scanner
-# no-oficial puede usar otro nombre o no exponerlos → la 1a corrida es el piloto).
+# Schema INTRADIA propio (18 col). Piloto 3-jul: todos los campos existen con estos
+# nombres del scanner; pendiente validar movimiento vivo en sesion (P160.a).
 TV_COLS = [
     "name", "open", "close", "change", "gap",              # precio + % del dia + gap
     "high", "low",                                          # rango de sesion (¿en maximos=fuerza?)
     "volume", "relative_volume_10d_calc",                   # volumen + relvol (rey del momentum)
     "RSI", "ATR", "Volatility.M",                           # osciladores/volatilidad en curso
     "SMA50",                                                # media que SI se pierde/recupera intradia
-    "VWAP",                                                 # ~ el indicador intradia por excelencia
-    "premarket_change",                                     # ~ movimiento en extendido (gaps nacen aqui)
-    "postmarket_change",                                    # ~ postmercado
-    "Value.Traded",                                         # ~ turnover (flujo real $ = filtra pump de centimos)
+    "VWAP",                                                 # el indicador intradia por excelencia
+    "premarket_change",                                     # movimiento en extendido (gaps nacen aqui)
+    "postmarket_change",                                    # postmercado
+    "Value.Traded",                                         # turnover (flujo real $ = filtra pump de centimos)
 ]
 
 def scan(market, chunk=8000):
@@ -60,7 +61,7 @@ def r2(x): return round(x, 2) if isinstance(x, (int, float)) else ""
 def dist(a, b):
     return round((a / b - 1) * 100, 2) if isinstance(a, (int, float)) and isinstance(b, (int, float)) and b else ""
 
-ahora = datetime.datetime.utcnow()
+ahora = datetime.datetime.now(datetime.timezone.utc)
 stamp = ahora.strftime("%Y%m%d-%H%M")   # AAAAMMDD-HHMM (UTC) → facilita purga por prefijo de fecha
 # Schema de salida intradia (18 col volatiles; dist_vwap DERIVADA como dist_sma50)
 HDR = ("ticker,open,last,chg_pct,gap_pct,high,low,vol,relvol,rsi14,atr14_pct,"
@@ -85,4 +86,4 @@ outdir = pathlib.Path(CFG["out"]); outdir.mkdir(exist_ok=True)
 out = outdir / f"TEMPTV-{stamp}.csv"
 out.write_text(HDR + "\n" + cuerpo + "\n", encoding="utf-8")
 print(f"OK intradia {stamp} [{MARKET}]: {len(rows)} filas -> {out}")
-print(f"~~ TEMP-TV efimero: purga MANUAL (Lucho). Campos VWAP/premkt/postmkt/turnover = ~ validar en este piloto.")
+print("~~ TEMP-TV efimero (no consolida a historico): purga MANUAL (Lucho).")
