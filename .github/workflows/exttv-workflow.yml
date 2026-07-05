@@ -1,0 +1,42 @@
+name: exttv-workflow
+on:
+  # ── FASE 1 (ahora): SOLO manual. El piloto se dispara con un click en Actions.
+  #    La pila nace ya en el schema-14 canonico (lo que dara la automatizacion), y el
+  #    CSV export manual de TV Extended++ queda como AUDITORIA (costura pilar-2).
+  workflow_dispatch: {}
+  # ── FASE 2 (condicional a ~50 CSVs validos, evaluar oct-26 · P180.d):
+  #    DESCOMENTAR el bloque schedule. Cron de GitHub = UTC fijo; el horario US baila con
+  #    el DST, asi que 7 disparos dejan 3 capturas VALIDAS por ventana todo el año — la
+  #    guarda horaria del script mata en silencio los 2 que caen fuera segun estacion.
+  #    (La guarda es la unica verdad de "dentro/fuera de ventana"; el cron solo aproxima.)
+  # schedule:
+  #   # premarket 07:00-09:25 ET  (verano 08:00/08:45/09:15 · invierno 07:00/07:45/08:15)
+  #   - cron: '0 12 * * 1-5'
+  #   - cron: '45 12 * * 1-5'
+  #   - cron: '15 13 * * 1-5'
+  #   # postmarket 16:05-19:00 ET (verano 16:20/17:15/18:45 · invierno 16:15/17:45/18:45)
+  #   - cron: '20 20 * * 1-5'
+  #   - cron: '15 21 * * 1-5'
+  #   - cron: '45 22 * * 1-5'
+  #   - cron: '45 23 * * 1-5'
+permissions:
+  contents: write
+concurrency:
+  group: exttv-workflow
+  cancel-in-progress: false
+jobs:
+  extended:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: panel extended mercado completo
+        run: python producer_extv.py america
+      - name: commit
+        run: |
+          git config user.name "ext-tv-action"
+          git config user.email "ext-tv-action@users.noreply.github.com"
+          git add -A
+          git commit -m "ext-tv: extended $(date -u +%FT%H%MZ)" || echo "sin cambios"
+          git push
