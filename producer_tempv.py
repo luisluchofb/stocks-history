@@ -7,8 +7,26 @@ high/low de sesion, turnover) que el analisis tecnico/momentum usa y ningun hist
 Escribe SOLO en TEMP-TV/ con nombre TEMPTV-AAAAMMDD-HHMM.csv (varios por dia conviven).
 NO dedupe, NO DELISTED (son del historico). Purga = MANUAL (Lucho, a criterio).
 Campos volatiles (VWAP/premkt/postmkt/turnover) CONFIRMADOS en piloto estructural
-3-jul-2026; pendiente solo validar movimiento vivo en sesion (P160.a).
+3-jul-2026; pendiente solo validar movimiento vivo en sesion (P174.a).
 Uso: python producer_tempv.py [america]
+
+────────────────────────────────────────────────────────────────────────
+AMPLIACION 4-jul-2026 · schema 18 -> 20 col (Anexo 6.8, cierra frente (a) de P180):
+  + rsi5              exhaustion intradia rapida (RSI 14 diluye la señal — caso AVAV 4-jul:
+                      RSI 14 = 60,36 mientras RSI 5 = 82,41).
+  + chg_from_open_pct momentum real desde la apertura US, separado del gap (caso AVAV:
+                      chg total +10,70% = gap +4,53% + sesion desde apertura +5,90%).
+  chg_from_open_pct es DERIVADO (last vs open) — NO necesita campo nuevo del scanner.
+  rsi5 SI necesita campo del scanner: nombre candidato [~], VERIFICAR EN SECO (ver nota).
+
+VERIFICAR EN SECO (norma A — dato de pantalla nace ~):
+  El TEMP-TV probado usa RSI(14) = 'RSI'. El campo de RSI(5) NO esta verificado contra el
+  scanner API. Candidato: 'RSI5'. Corre `python3 producer_tempv.py` en sesion US y mira la
+  columna rsi5: si viene poblada -> nombre OK; si viene toda vacia -> el string es otro
+  (probar variantes) — el valor EXISTE en TV (el filtro manual 'TV Intradia' del 6.10 ya
+  muestra RSI 5), solo hay que fijar el identificador del API. NO es bloqueante: si el campo
+  falla, rsi5 sale vacio y el resto del panel se escribe igual (celda vacia, no se inventa).
+────────────────────────────────────────────────────────────────────────
 """
 import json, sys, datetime, pathlib, urllib.request
 
@@ -17,13 +35,15 @@ CFG = {
     "america": {"out": "TEMP-TV", "exch": ["NYSE", "NASDAQ", "AMEX"], "min_rows": 4000},
 }[MARKET]
 
-# Schema INTRADIA propio (18 col). Piloto 3-jul: todos los campos existen con estos
-# nombres del scanner; pendiente validar movimiento vivo en sesion (P160.a).
+# Schema INTRADIA propio (20 col). Piloto 3-jul: los 18 originales existen con estos nombres
+# del scanner; los 2 nuevos: chg_from_open_pct es derivado (open/last), rsi5 es campo [~].
 TV_COLS = [
     "name", "open", "close", "change", "gap",              # precio + % del dia + gap
     "high", "low",                                          # rango de sesion (¿en maximos=fuerza?)
     "volume", "relative_volume_10d_calc",                   # volumen + relvol (rey del momentum)
-    "RSI", "ATR", "Volatility.M",                           # osciladores/volatilidad en curso
+    "RSI",                                                  # [OK] RSI(14)
+    "RSI5",                                                 # [~]  RSI(5) — VERIFICAR EN SECO (ver nota)
+    "ATR", "Volatility.M",                                  # volatilidad en curso
     "SMA50",                                                # media que SI se pierde/recupera intradia
     "VWAP",                                                 # el indicador intradia por excelencia
     "premarket_change",                                     # movimiento en extendido (gaps nacen aqui)
@@ -63,20 +83,23 @@ def dist(a, b):
 
 ahora = datetime.datetime.now(datetime.timezone.utc)
 stamp = ahora.strftime("%Y%m%d-%H%M")   # AAAAMMDD-HHMM (UTC) → facilita purga por prefijo de fecha
-# Schema de salida intradia (18 col volatiles; dist_vwap DERIVADA como dist_sma50)
-HDR = ("ticker,open,last,chg_pct,gap_pct,high,low,vol,relvol,rsi14,atr14_pct,"
-       "volatility_1m,dist_sma50,vwap,dist_vwap,premkt_chg,postmkt_chg,turnover_usd")
+# Schema de salida intradia (20 col; dist_vwap y chg_from_open_pct DERIVADOS con dist()).
+HDR = ("ticker,open,last,chg_pct,gap_pct,chg_from_open_pct,high,low,vol,relvol,"
+       "rsi14,rsi5,atr14_pct,volatility_1m,dist_sma50,vwap,dist_vwap,premkt_chg,postmkt_chg,turnover_usd")
 
 def fila(t, d):
     c = d.get("close")   # intradia: 'close' del scanner = ULTIMO precio en curso
+    op = d.get("open")
     atr = round(d["ATR"] / c * 100, 2) if isinstance(d.get("ATR"), (int, float)) and c else ""
     vol = d.get("volume"); vol = int(vol) if isinstance(vol, (int, float)) else ""
     vwap = d.get("VWAP")
     turn = d.get("Value.Traded"); turn = int(turn) if isinstance(turn, (int, float)) else ""
-    return [t, r2(d.get("open")), r2(c), r2(d.get("change")), r2(d.get("gap")),
+    return [t, r2(op), r2(c), r2(d.get("change")), r2(d.get("gap")),
+            dist(c, op),                                    # chg_from_open_pct (last vs open, derivado)
             r2(d.get("high")), r2(d.get("low")),
-            vol, r2(d.get("relative_volume_10d_calc")), r2(d.get("RSI")), atr,
-            r2(d.get("Volatility.M")),
+            vol, r2(d.get("relative_volume_10d_calc")),
+            r2(d.get("RSI")), r2(d.get("RSI5")),            # rsi14, rsi5
+            atr, r2(d.get("Volatility.M")),
             dist(c, d.get("SMA50")),
             r2(vwap), dist(c, vwap),
             r2(d.get("premarket_change")), r2(d.get("postmarket_change")), turn]
