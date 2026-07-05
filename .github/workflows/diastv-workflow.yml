@@ -19,8 +19,8 @@ jobs:
         run: python producer_diastv.py america
       - name: commit
         run: |
-          git config user.name "live-action"
-          git config user.email "live-action@users.noreply.github.com"
+          git config user.name "dias-tv-action"
+          git config user.email "dias-tv-action@users.noreply.github.com"
           git add -A
-          git commit -m "live: cierre $(date -u +%F)" || echo "sin cambios"
+          git commit -m "dias-tv: cierre $(date -u +%F)" || echo "sin cambios"
           git push
