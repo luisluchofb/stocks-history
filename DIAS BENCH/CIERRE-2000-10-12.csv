@@ -1,0 +1,2 @@
+ticker,open,close,chg_pct,gap_pct,vol,relvol,perf_1w,perf_1m,perf_3m,perf_6m,perf_ytd,rsi14,volatility_1m,atr14_pct,dist_sma50,dist_sma200,pct_52wh
+QQQ,67.19,63.68,-2.52,2.84,62779189,1.69,-12.53,-19.67,-25.35,-14.65,-20.73,27.3,2.99,5.65,-18.23,-20.71,-36.2
